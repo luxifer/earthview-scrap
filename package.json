@@ -1,0 +1,14 @@
+{
+  "name": "earthview-scrap",
+  "version": "0.1.0",
+  "description": "Download wallpapers from earthview.withgoogle.com",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Florent Viel <luxifer666@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "jsdom": "^11.2.0"
+  }
+}
