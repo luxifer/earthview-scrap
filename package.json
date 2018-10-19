@@ -9,6 +9,6 @@
   "author": "Florent Viel <luxifer666@gmail.com>",
   "license": "ISC",
   "dependencies": {
-    "jsdom": "^11.2.0"
+    "jsdom": "^11.12.0"
   }
 }

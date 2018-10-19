@@ -23,12 +23,20 @@ function getPage(url) {
 
 function download(pathname, filename) {
     return new Promise((resolve, reject) => {
-        let file = fs.createWriteStream(path.join(destPath, prefix+filename));
+        let dest = path.join(destPath, prefix + filename);
+
+        if (fs.existsSync(dest)) {
+            console.log(`file ${filename} alerady exists`);
+            resolve();
+        }
+
+        let file = fs.createWriteStream(dest);
         https.get(pathname, (res) => {
             res.pipe(file);
 
             res.on('end', () => {
                 file.close();
+                console.log(`downloaded ${filename}`);
                 resolve();
             });
 
