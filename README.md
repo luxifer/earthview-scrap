@@ -11,4 +11,4 @@ npm install
 node main.js
 ```
 
-Wallpapers are now in the `wallpapers/` folder.
+Wallpapers are now in the `exifs/` folder.
