@@ -13,7 +13,7 @@ const download = (url, dest) =>
     const file = fs.createWriteStream(dest);
     https.get(url, res => {
       res.pipe(file);
-      file.on('finish', file.close(resolve).bind(this));
+      file.on('finish',()=> file.close(resolve));
     });
   });
 
@@ -21,6 +21,7 @@ c.options.callback = (err, { $ }, done) => {
   const data = JSON.parse($('body').attr('data-photo'));
   const filename = path.join('exifs', `${prefix}${data.id}.jpg`);
 
+  console.log('Enqueuing ' + data.nextUrl);
   c.queue(encodeURI(baseUrl + data.nextUrl));
 
   if (fs.existsSync(filename)) done();
