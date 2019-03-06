@@ -6,63 +6,48 @@ const https = require('https');
 
 const baseUrl = 'https://earthview.withgoogle.com';
 const prefix = 'google-earth-view-';
+const c = new Crawler({ maxConnections: 10 });
 
-let c = new Crawler({
-    maxConnections: 10
-});
-
-let download = (url ,dest) => {
-    return new Promise((resolve, reject) => {
-        let file = fs.createWriteStream(dest);
-        https.get(url, (res) => {
-            res.pipe(file);
-            file.on('finish', () => {
-                file.close(resolve);
-            })
-        });
+const download = (url, dest) =>
+  new Promise(resolve => {
+    const file = fs.createWriteStream(dest);
+    https.get(url, res => {
+      res.pipe(file);
+      file.on('finish', file.close(resolve).bind(this));
     });
-};
+  });
 
-c.options.callback = (err, res, done) => {
-    let $ = res.$;
-    let data = JSON.parse($('body').attr('data-photo'));
-    let filename = path.join('exifs', `${prefix}${data.id}.jpg`);
-    let url = encodeURI(baseUrl + data.nextUrl);
+c.options.callback = (err, { $ }, done) => {
+  const data = JSON.parse($('body').attr('data-photo'));
+  const filename = path.join('exifs', `${prefix}${data.id}.jpg`);
 
-    console.log('Enqueuing ' + url);
-    c.queue(url);
+  c.queue(encodeURI(baseUrl + data.nextUrl));
 
-    // skip if file aloready exists
-    if (fs.existsSync(filename)) {
-        done();
-        return;
-    }
+  if (fs.existsSync(filename)) done();
 
-    download(data.photoUrl, filename).then(() => {
-        let zeroth = {};
-        zeroth[piexifjs.ImageIFD.Copyright] = data.attribution;
+  download(data.photoUrl, filename).then(() => {
+    const lat = parseFloat(data.lat);
+    const lng = parseFloat(data.lng);
+    const { degToDmsRational } = piexifjs.GPSHelper;
 
-        let gps = {};
-        let latitude = parseFloat(data.lat);
-        gps[piexifjs.GPSIFD.GPSLatitude] = piexifjs.GPSHelper.degToDmsRational(Math.abs(latitude));
-        gps[piexifjs.GPSIFD.GPSLatitudeRef] = latitude < .0 ? 'S' : 'N';
-        let longitude = parseFloat(data.lng);
-        gps[piexifjs.GPSIFD.GPSLongitude] = piexifjs.GPSHelper.degToDmsRational(Math.abs(longitude));
-        gps[piexifjs.GPSIFD.GPSLongitudeRef] = longitude < .0 ? 'W' : 'E';
-
-        let exif = {
-            "0th": zeroth,
-            "GPS": gps
-        };
-        let srcData = fs.readFileSync(filename);
-        let exifData = piexifjs.dump(exif);
-        let destData = piexifjs.insert(exifData, srcData.toString('binary'));
-        fs.writeFileSync(filename, destData, {
-            'encoding': 'binary'
-        });
-
-        done();
-    });
+    fs.writeFileSync(
+      filename,
+      piexifjs.insert(
+        piexifjs.dump({
+          '0th': { [piexifjs.ImageIFD.Copyright]: data.attribution },
+          GPS: {
+            [piexifjs.GPSIFD.GPSLatitude]: degToDmsRational(Math.abs(lat)),
+            [piexifjs.GPSIFD.GPSLatitudeRef]: lat < 0.0 ? 'S' : 'N',
+            [piexifjs.GPSIFD.GPSLongitude]: degToDmsRational(Math.abs(lng)),
+            [piexifjs.GPSIFD.GPSLongitudeRef]: lng < 0.0 ? 'W' : 'E',
+          },
+        }),
+        fs.readFileSync(filename).toString('binary')
+      ),
+      { encoding: 'binary' }
+    );
+    done();
+  });
 };
 
 c.queue(baseUrl);
