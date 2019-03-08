@@ -26,7 +26,7 @@ c.options.callback = (err, { $ }, done) => {
 
   if (fs.existsSync(filename)) done();
 
-  download(data.photoUrl, filename).then(() => {
+  download(baseUrl + data.downloadUrl, filename).then(() => {
     const lat = parseFloat(data.lat);
     const lng = parseFloat(data.lng);
     const { degToDmsRational } = piexifjs.GPSHelper;
