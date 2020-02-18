@@ -21,12 +21,12 @@ c.options.callback = (err, { $ }, done) => {
   const data = JSON.parse($('body').attr('data-photo'));
   const filename = path.join('exifs', `${prefix}${data.id}.jpg`);
 
-  console.log('Enqueuing ' + data.nextUrl);
-  c.queue(encodeURI(baseUrl + data.nextUrl));
+  console.log('Enqueuing ' + data.nextSlug);
+  c.queue(encodeURI(baseUrl + "/" + data.nextSlug));
 
   if (fs.existsSync(filename)) done();
 
-  download(baseUrl + data.downloadUrl, filename).then(() => {
+  download(data.photoUrl, filename).then(() => {
     const lat = parseFloat(data.lat);
     const lng = parseFloat(data.lng);
     const { degToDmsRational } = piexifjs.GPSHelper;
